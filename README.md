@@ -1,4 +1,5 @@
-# Ai_Powered_Call_Centre_Intelligence_Suryaraman-infosys-springboard-
+# INFOSYS SPRINGBOARD INTERN PROJECT
+#AI powered call center Intelligence
 # AI-powered product search and recommendation chatbot
 Developed a web application using FastAPI and Streamlit for real-time product search and recommendations. Integrated SerpAPI to fetch e-commerce data and Google Gemini for generating AI-based responses. Enabled voice input/output with SpeechRecognition and gTTS. Implemented both text and voice interactions, providing personalized product suggestions and seamless user experience.
 ## Features
