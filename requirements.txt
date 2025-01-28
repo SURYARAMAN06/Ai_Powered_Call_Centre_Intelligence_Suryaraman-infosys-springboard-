@@ -1,0 +1,11 @@
+fastapi
+pydantic
+uvicorn
+google-generativeai
+serpapi
+python-dotenv
+streamlit
+speechrecognition
+pygame
+gtts
+requests
