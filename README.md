@@ -1,8 +1,6 @@
 # Ai_Powered_Call_Centre_Intelligence_Suryaraman-infosys-springboard-
-# AI-Powered Customer Chatbot
-
-This project is an AI-powered customer chatbot that helps users interact via text and voice input/output. The chatbot uses Google Gemini for generating responses and SerpAPI for searching products. It is built using FastAPI for the backend and Streamlit for the frontend.
-
+# AI-powered product search and recommendation chatbot
+Developed a web application using FastAPI and Streamlit for real-time product search and recommendations. Integrated SerpAPI to fetch e-commerce data and Google Gemini for generating AI-based responses. Enabled voice input/output with SpeechRecognition and gTTS. Implemented both text and voice interactions, providing personalized product suggestions and seamless user experience.
 ## Features
 
 - **Text and Voice Input**: Users can interact with the chatbot through text or voice input.
