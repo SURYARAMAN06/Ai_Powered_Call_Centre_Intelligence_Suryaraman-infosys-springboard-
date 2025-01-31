@@ -53,15 +53,10 @@ def listen():
             st.write("Sorry, I did not understand that.")
             return None
 
-# Function to interact with FastAPI to search for products
-def search_products(query, min_price, max_price):
-    response = requests.post(f"{FASTAPI_URL}/search-products", json={"query": query, "min_price": min_price, "max_price": max_price})
-    return response.json().get('products', [])
-
-# Function to interact with FastAPI to get Gemini response
-def get_gemini_response(query):
-    response = requests.get(f"{FASTAPI_URL}/get-response", params={"query": query})
-    return response.json().get('response', "Sorry, I couldn't process that.")
+# Function to interact with FastAPI to handle both normal and product-related queries
+def handle_query(query, min_price, max_price):
+    response = requests.post(f"{FASTAPI_URL}/handle-query", json={"query": query, "min_price": min_price, "max_price": max_price})
+    return response.json().get('response', "No response from the server.")
 
 # Main Streamlit interface
 def main():
@@ -69,7 +64,7 @@ def main():
     
     # Add Title and Subtitle
     st.title("AI-Powered Customer Chatbot")
-    st.subheader("Ask questions or get product recommendations")
+    st.subheader("Ask questions to get product recommendations")
 
     # Sidebar for interaction options
     with st.sidebar:
@@ -79,21 +74,19 @@ def main():
         min_price = st.number_input("Minimum Price", min_value=0, value=0)
         max_price = st.number_input("Maximum Price", min_value=0, value=100000)
 
-    # Non-product conversation section
-    non_product_conversation = st.button("Non-product Conversation")
-    if non_product_conversation:
-        st.write("You are now in a normal customer interaction mode. Ask anything!")
-        
-        # Input for user query
-        user_query = listen() if interaction_type == "Voice Input" else st.text_input("Ask me a question or query:", key="user_input")
-        
-        # Use FastAPI for normal interaction (Gemini)
+    # User input section based on chosen interaction mode
+    user_query = listen() if interaction_type == "Voice Input" else st.text_input("Ask me a question or query:", key="user_input")
+
+    # Button for handling both normal and product-related queries
+    if st.button("ANSWER"):
         if user_query:
-            response = get_gemini_response(user_query)
+            response = handle_query(user_query, min_price, max_price)
             st.write(response)
             st.session_state['history'].append(f"Bot: {response}")
             if output_type == "Voice Output":
                 speak_text(response)
+        else:
+            st.warning("Please enter a product name or a question.")
 
     # Stop button to end conversation immediately
     stop_button = st.button("Stop Conversation")
@@ -106,48 +99,6 @@ def main():
         st.subheader("Chat History")
         for message in st.session_state['history']:
             st.write(message)
-
-    # User input section based on chosen interaction mode
-    if interaction_type == "Text Input":
-        user_query = st.text_input("Ask me a question or query:")
-
-    if interaction_type == "Voice Input" and st.button("Speak"):
-        user_query = listen()
-
-    # Button for fetching product details from SerpAPI
-    if st.button("ANSWER"):
-        if user_query:
-            products = search_products(user_query, min_price, max_price)
-            filtered_products = []
-            for product in products:
-                # Only add products with rating > 4.5
-                rating = float(product.get("rating", 0))
-                if rating > 4.5:
-                    title = product.get("title", "No title")
-                    price = product.get("price", "No price")
-                    link = product.get("link", "No link")
-                    filtered_products.append({
-                        "title": title,
-                        "price": price,
-                        "rating": rating,
-                        "link": link
-                    })
-
-            if filtered_products:
-                formatted_info = ""
-                for product in filtered_products:
-                    formatted_info += f"**Product:** {product['title']}\n"
-                    formatted_info += f"**Price:** {product['price']}\n"
-                    formatted_info += f"**Rating:** {product['rating']}\n"
-                    formatted_info += f"**Link:** {product['link']}\n\n"
-                st.write(formatted_info)
-                st.session_state['history'].append(f"Bot: {formatted_info}")
-                if output_type == "Voice Output":
-                    speak_text(formatted_info)  # Voice output
-            else:
-                st.warning("No products with a rating higher than 4.5 found.")
-        else:
-            st.warning("Please enter a product name to search.")
 
 if __name__ == "__main__":
     main()
