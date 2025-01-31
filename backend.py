@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Load environment variables (for API keys)
 load_dotenv()
 
-# SerpAPI Key
+# SerpAPI Key and GoogleAPTkey
 SERPAPI_KEY = os.getenv('SERPAPI_KEY')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
@@ -34,7 +34,6 @@ def search_amazon(query, min_price, max_price):
         "hl": "en",  # Language set to English
     }
 
-    # Add price filters
     if min_price:
         params["min_price"] = min_price
     if max_price:
@@ -44,22 +43,29 @@ def search_amazon(query, min_price, max_price):
     results = search.get_dict()
     return results.get('shopping_results', [])
 
-# Function to get response from Gemini
-def get_gemini_response(input_text):
-    if input_text:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content([input_text])
-        return response.text if response else "No response generated."
-    return "Sorry, I couldn't process that."
+# Function to get response from Gemini, for both normal and product-related queries
+def get_gemini_response(query, products=None):
+    if products:
+        product_details = "\n".join([f"Product: {p['title']}, Price: {p['price']}, Link: {p['link']}" for p in products])
+        input_text = f"User query: {query}\nHere are the product details:\n{product_details} and also provide suggestions"
+    else:
+        input_text = f"User query: {query}. Please answer the query."
+    
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content([input_text])
+    
+    return response.text if response else "No response generated."
 
-# Endpoint to fetch product details
-@app.post("/search-products")
-async def search_products(query: ProductSearchQuery):
+# Endpoint to handle both normal and product-related queries
+@app.post("/handle-query")
+async def handle_query(query: ProductSearchQuery):
+    # Try to fetch products based on the query
     products = search_amazon(query.query, query.min_price, query.max_price)
-    return {"products": products}
 
-# Endpoint for Gemini model to generate response for user query
-@app.get("/get-response")
-async def get_response(query: str):
-    response = get_gemini_response(query)
+    # If products are found, include them in the LLM response; otherwise, handle it as a normal conversation
+    if products:
+        response = get_gemini_response(query.query, products)
+    else:
+        response = get_gemini_response(query.query)
+    
     return {"response": response}
